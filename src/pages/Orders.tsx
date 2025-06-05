@@ -111,6 +111,11 @@ const Orders = () => {
     setOrders(prev => [newOrder, ...prev]);
   };
 
+  const getLastOrderNumber = () => {
+    if (orders.length === 0) return null;
+    return orders[0].orderNumber;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -162,7 +167,7 @@ const Orders = () => {
                   {format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}"}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                     {getStatusIcon(order.status)}
                     <span className="ml-1">{getStatusText(order.status)}</span>
                   </span>
@@ -343,6 +348,7 @@ const Orders = () => {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSave={handleSaveOrder}
+        lastOrderNumber={getLastOrderNumber()}
       />
     </div>
   );

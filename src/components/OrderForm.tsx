@@ -1,4 +1,3 @@
-///tsx
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { Order, OrderItem } from '../types';
@@ -8,11 +7,18 @@ interface OrderFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (order: Omit<Order, '_id'>) => void;
+  lastOrderNumber?: string;
 }
 
-const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSave }) => {
+const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSave, lastOrderNumber }) => {
+  const generateOrderNumber = () => {
+    if (!lastOrderNumber) return 'ORD-001';
+    const currentNumber = parseInt(lastOrderNumber.split('-')[1]);
+    return `ORD-${String(currentNumber + 1).padStart(3, '0')}`;
+  };
+
   const [formData, setFormData] = useState<Partial<Order>>({
-    orderNumber: "ORD-${Date.now()}",
+    orderNumber: generateOrderNumber(),
     supplier: '',
     status: 'pending',
     items: [],
@@ -149,6 +155,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSave }) => {
             
             <div className="flex gap-4 mb-4">
               <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del producto</label>
                 <input
                   type="text"
                   placeholder="Nombre del producto"
@@ -158,6 +165,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSave }) => {
                 />
               </div>
               <div className="w-32">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
                 <input
                   type="number"
                   min="1"
@@ -168,6 +176,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSave }) => {
                 />
               </div>
               <div className="w-32">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Precio ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -177,13 +186,15 @@ const OrderForm: React.FC<OrderFormProps> = ({ isOpen, onClose, onSave }) => {
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                 />
               </div>
-              <button
-                type="button"
-                onClick={addItem}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Lista de productos */}
