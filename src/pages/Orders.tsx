@@ -1,4 +1,3 @@
-///tsx
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { 
@@ -17,7 +16,7 @@ const mockOrders: Order[] = [
     _id: '1',
     orderNumber: 'ORD-001',
     supplier: 'MINUTO VERDE',
-    status: 'processing',
+    status: 'pending',
     items: [
       {
         productId: '1',
@@ -36,14 +35,13 @@ const mockOrders: Order[] = [
       {
         status: 'pending',
         timestamp: new Date(Date.now() - 3600000).toISOString(),
-      },
-      {
-        status: 'processing',
-        timestamp: new Date().toISOString(),
       }
     ]
   }
 ];
+
+const statusSequence = ['pending', 'processing', 'on_the_way'];
+const finalStatuses = ['delivered', 'delayed'];
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
@@ -51,18 +49,61 @@ const Orders = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  useEffect(() => {
+    // Update status every 2 minutes
+    const interval = setInterval(() => {
+      setOrders(currentOrders => 
+        currentOrders.map(order => {
+          if (finalStatuses.includes(order.status)) return order;
+
+          const currentIndex = statusSequence.indexOf(order.status);
+          if (currentIndex === statusSequence.length - 1) {
+            // Randomly choose between delivered and delayed
+            const finalStatus = Math.random() > 0.7 ? 'delayed' : 'delivered';
+            return {
+              ...order,
+              status: finalStatus,
+              statusHistory: [
+                ...order.statusHistory,
+                {
+                  status: finalStatus,
+                  timestamp: new Date().toISOString()
+                }
+              ]
+            };
+          }
+
+          const nextStatus = statusSequence[currentIndex + 1];
+          return {
+            ...order,
+            status: nextStatus,
+            statusHistory: [
+              ...order.statusHistory,
+              {
+                status: nextStatus,
+                timestamp: new Date().toISOString()
+              }
+            ]
+          };
+        })
+      );
+    }, 120000); // 2 minutes
+
+    return () => clearInterval(interval);
+  }, []);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
         return 'bg-green-100 text-green-800';
       case 'processing':
         return 'bg-yellow-100 text-yellow-800';
+      case 'on_the_way':
+        return 'bg-blue-100 text-blue-800';
       case 'delayed':
         return 'bg-red-100 text-red-800';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800';
       default:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -71,6 +112,7 @@ const Orders = () => {
       case 'delivered':
         return <CheckCircle2 className="w-4 h-4 text-green-600" />;
       case 'processing':
+      case 'on_the_way':
         return <Clock className="w-4 h-4 text-yellow-600" />;
       case 'delayed':
         return <AlertTriangle className="w-4 h-4 text-red-600" />;
@@ -87,10 +129,10 @@ const Orders = () => {
         return 'Entregado';
       case 'processing':
         return 'En Preparación';
+      case 'on_the_way':
+        return 'En Camino';
       case 'delayed':
-        return 'Retrasado';
-      case 'cancelled':
-        return 'Cancelado';
+        return 'Atrasado';
       case 'pending':
         return 'Pendiente';
       default:
@@ -326,17 +368,12 @@ const Orders = () => {
             )}
 
             {/* Acciones */}
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setIsDetailOpen(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cerrar
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
-              >
-                Actualizar Estado
               </button>
             </div>
           </div>
